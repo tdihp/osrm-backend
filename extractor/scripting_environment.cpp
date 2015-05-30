@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extraction_node.hpp"
 #include "extraction_way.hpp"
 #include "../data_structures/external_memory_node.hpp"
+#include "../data_structures/raster_source.hpp"
 #include "../util/lua_util.hpp"
 #include "../util/osrm_exception.hpp"
 #include "../util/simple_logger.hpp"
@@ -80,6 +81,9 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
         luabind::def("print", LUA_print<std::string>),
         luabind::def("durationIsValid", durationIsValid),
         luabind::def("parseDuration", parseDuration),
+        luabind::def("load_raster_data", loadRasterSource),
+        luabind::def("get_raster_data", getRasterDataFromSource),
+        luabind::def("get_raster_interpolate", getRasterInterpolateFromSource),
 
         luabind::class_<std::vector<std::string>>("vector")
             .def("Add", static_cast<void (std::vector<std::string>::*)(const std::string &)>(
