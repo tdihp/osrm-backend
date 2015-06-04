@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../util/simple_logger.hpp"
 #include "../util/timing_util.hpp"
+#include "../util/osrm_exception.hpp"
 
 #include "../typedefs.h"
 
@@ -40,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <sstream>
 #include <cmath>
+#include <iostream>
 
 class RasterSource
 {
@@ -49,6 +51,7 @@ class RasterSource
 
     float calcSize(double min, double max, unsigned count)
     {
+        SimpleLogger().Write() << "count: " << count;
         return (max - min) / count;
     };
 
@@ -60,28 +63,38 @@ class RasterSource
     const double ymin;
     const double ymax;
 
-    short getRasterData(const double lat, const double lon)
+    short getRasterData(const double lon, const double lat)
     {
-        unsigned xthP = (lat - xmin) / xstep;
-        int xth = (xthP - floor (xthP)) > (xstep / 2) ? floor (xthP) : ceil (xthP) + 1;
+        if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
+        {
+            throw osrm::exception("Requested data out of range");
+        }
 
-        unsigned ythP = (ymax - lon) / ystep;
-        int yth = (ythP - floor (ythP)) > (ystep / 2) ? floor (ythP) : ceil (ythP) + 1;
+        unsigned xthP = (lon - xmin) / xstep;
+        int xth = ((xthP - floor (xthP)) > (xstep / 2) ? floor (xthP) : ceil (xthP));
+
+        unsigned ythP = (ymax - lat) / ystep;
+        int yth = ((ythP - floor (ythP)) > (ystep / 2) ? floor (ythP) : ceil (ythP));
 
         return raster_data[yth][xth];
     };
 
-    short getRasterInterpolate(const double lat, const double lon)
+    short getRasterInterpolate(const double lon, const double lat)
     {
-        unsigned xthP = (lat - xmin) / xstep;
-        unsigned ythP = (ymax - lon) / ystep;
+        if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
+        {
+            throw osrm::exception("Requested data out of range");
+        }
+
+        unsigned xthP = (lon - xmin) / xstep;
+        unsigned ythP = (ymax - lat) / ystep;
         int top    = floor (ythP);
         int bottom = ceil  (ythP);
         int left   = floor (xthP);
         int right  = ceil  (xthP);
 
-        float x = (lat - left * xstep + xmin) / xstep;
-        float y = (ymax - top * ystep - lon) / ystep;
+        float x = (lon - left * xstep + xmin) / xstep;
+        float y = (ymax - top * ystep - lat) / ystep;
         float x1 = 1.0 - x;
         float y1 = 1.0 - y;
 
