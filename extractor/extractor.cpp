@@ -116,6 +116,9 @@ int extractor::run()
         SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
 
+        luabind::call_function<void>(
+            scripting_environment.get_lua_state(), "source_function");
+
         std::string generator = header.get("generator");
         if (generator.empty())
         {

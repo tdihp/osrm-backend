@@ -66,6 +66,9 @@ ScriptingEnvironment::ScriptingEnvironment(const std::string &file_name) : file_
     SimpleLogger().Write() << "Using script " << file_name;
 }
 
+// This will be used so we can optionally call source_function without breaking other profiles
+void noOp() {}
+
 void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
 {
     typedef double (osmium::Location::*location_member_ptr_type)() const;
@@ -84,6 +87,7 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
         luabind::def("load_raster_data", loadRasterSource),
         luabind::def("get_raster_data", getRasterDataFromSource),
         luabind::def("get_raster_interpolate", getRasterInterpolateFromSource),
+        luabind::def("source_function", noOp),
 
         luabind::class_<std::vector<std::string>>("vector")
             .def("Add", static_cast<void (std::vector<std::string>::*)(const std::string &)>(

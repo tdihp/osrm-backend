@@ -120,26 +120,27 @@ class RasterSource
     ~RasterSource() {};
 };
 
-std::vector<RasterSource> LoadedSources;
-std::unordered_map<std::string, int> LoadedSourcePaths;
+std::unordered_map<std::string, RasterSource> LoadedSources;
+std::unordered_map<std::string, std::string> LoadedSourcePaths;
 
-int loadRasterSource(const std::string &source_path, const double xmin, const double xmax, const double ymin, const double ymax)
+void loadRasterSource(const std::string &source_path, const std::string &source_id, const double xmin, const double xmax, const double ymin, const double ymax)
 {
     auto itr = LoadedSourcePaths.find(source_path);
     if (itr != LoadedSourcePaths.end())
     {
-        std::cout << "[source loader] Already loaded source '" << source_path << "' at source_id " << itr->second << std::endl;
-        return itr->second;
+        std::cout << "[source loader] Already loaded source '" << source_path << "' with source_id " << itr->second << std::endl;
+        return;
     }
-
-    int source_id = LoadedSources.size();
 
     std::cout << "[source loader] Loading from " << source_path << "  ... " << std::flush;
     TIMER_START(loading_source);
 
     std::vector<std::vector<short>> rasterData;
 
-    if (!boost::filesystem::exists(source_path.c_str())) return -1;
+    if (!boost::filesystem::exists(source_path.c_str()))
+    {
+        throw osrm::exception("error reading: no such path");
+    }
     boost::filesystem::ifstream reader(source_path.c_str());
 
     std::stringstream ss;
@@ -161,28 +162,38 @@ int loadRasterSource(const std::string &source_path, const double xmin, const do
 
     RasterSource source(rasterData, xmin, xmax, ymin, ymax);
     LoadedSourcePaths.emplace(source_path, source_id);
-    LoadedSources.emplace_back(source);
+    LoadedSources.emplace(source_id, source);
 
     TIMER_STOP(loading_source);
     std::cout << "ok, after " << TIMER_SEC(loading_source) << "s" << std::endl;
-
-    return source_id;
 };
 
-short getRasterDataFromSource(const int source_id, const double lat, const double lon)
+short getRasterDataFromSource(const std::string &source_id, const double lat, const double lon)
 {
-    if (LoadedSources.size() < source_id + 1) return -1;
-
-    RasterSource found = LoadedSources[source_id];
-    return found.getRasterData(lat, lon);
+    auto itr = LoadedSources.find(source_id);
+    if (itr != LoadedSources.end())
+    {
+        RasterSource found = itr->second;
+        return found.getRasterData(lat, lon);
+    }
+    else
+    {
+        throw osrm::exception("error reading: no such loaded source");
+    }
 };
 
-short getRasterInterpolateFromSource(const int source_id, const double lat, const double lon)
+short getRasterInterpolateFromSource(const std::string &source_id, const double lat, const double lon)
 {
-    if (LoadedSources.size() < source_id + 1) return -1;
-
-    RasterSource found = LoadedSources[source_id];
-    return found.getRasterInterpolate(lat, lon);
+    auto itr = LoadedSources.find(source_id);
+    if (itr != LoadedSources.end())
+    {
+        RasterSource found = itr->second;
+        return found.getRasterInterpolate(lat, lon);
+    }
+    else
+    {
+        throw osrm::exception("error reading: no such loaded source");
+    }
 };
 
 #endif /* RASTER_SOURCE_HPP */
