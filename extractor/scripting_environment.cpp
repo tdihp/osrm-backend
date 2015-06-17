@@ -10,7 +10,7 @@ Redistributions of source code must retain the above copyright notice, this list
 of conditions and the following disclaimer.
 Redistributions in binary form must reproduce the above copyright notice, this
 list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
+luabind::other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -20,7 +20,7 @@ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+(INCLUDING NEGLIGENCE OR luabind::otherWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extraction_helper_functions.hpp"
 #include "extraction_node.hpp"
 #include "extraction_way.hpp"
+#include "internal_extractor_edge.hpp"
 #include "../data_structures/external_memory_node.hpp"
 #include "../data_structures/raster_source.hpp"
 #include "../util/lua_util.hpp"
@@ -38,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 #include <luabind/tag_function.hpp>
+#include <luabind/operator.hpp>
 
 #include <osmium/osm.hpp>
 
@@ -66,8 +68,9 @@ ScriptingEnvironment::ScriptingEnvironment(const std::string &file_name) : file_
     SimpleLogger().Write() << "Using script " << file_name;
 }
 
-// This will be used so we can optionally call source_function without breaking other profiles
-void noOp() {}
+// These will be used so we can optionally call source_function, segment_function without breaking luabind::other profiles
+void sourceNoOp() {}
+void segmentNoOp(InternalExtractorEdge &edge, const double &distance) {}
 
 void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
 {
@@ -87,7 +90,8 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
         luabind::def("load_raster_data", loadRasterSource),
         luabind::def("get_raster_data", getRasterDataFromSource),
         luabind::def("get_raster_interpolate", getRasterInterpolateFromSource),
-        luabind::def("source_function", noOp),
+        luabind::def("source_function", sourceNoOp),
+        luabind::def("segment_function", segmentNoOp),
 
         luabind::class_<std::vector<std::string>>("vector")
             .def("Add", static_cast<void (std::vector<std::string>::*)(const std::string &)>(
@@ -130,7 +134,37 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
         luabind::class_<osmium::Way>("Way")
             .def("get_value_by_key", &osmium::Way::get_value_by_key)
             .def("get_value_by_key", &get_value_by_key<osmium::Way>)
-            .def("id", &osmium::Way::id)
+            .def("id", &osmium::Way::id),
+        luabind::class_<InternalExtractorEdge>("Edge")
+            .def_readwrite("speed", &InternalExtractorEdge::speed)
+            .property("source_coordinate", &InternalExtractorEdge::source_coordinate)
+            .property("target_coordinate", &InternalExtractorEdge::target_coordinate),
+        luabind::class_<FixedPointCoordinate>("Coordinate")
+            .property("lat", &FixedPointCoordinate::lat)
+            .property("lon", &FixedPointCoordinate::lon),
+        luabind::class_<double>("double")
+            .def(luabind::constructor<>())
+            .def(luabind::constructor<double>())
+            .def(-luabind::self)
+            .def(luabind::const_self + luabind::const_self)
+            .def(luabind::const_self - luabind::const_self)
+            .def(luabind::const_self * luabind::const_self)
+            .def(luabind::const_self / luabind::const_self)
+            .def(luabind::const_self <= luabind::const_self)
+            .def(luabind::const_self < luabind::const_self)
+            .def(luabind::const_self == luabind::const_self)
+            .def(luabind::other<double>() + luabind::const_self)
+            .def(luabind::other<double>() - luabind::const_self)
+            .def(luabind::other<double>() * luabind::const_self)
+            .def(luabind::other<double>() / luabind::const_self)
+            .def(luabind::other<double>() <= luabind::const_self)
+            .def(luabind::other<double>() < luabind::const_self)
+            .def(luabind::const_self + luabind::other<double>())
+            .def(luabind::const_self - luabind::other<double>())
+            .def(luabind::const_self * luabind::other<double>())
+            .def(luabind::const_self / luabind::other<double>())
+            .def(luabind::const_self <= luabind::other<double>())
+            .def(luabind::const_self < luabind::other<double>())
     ];
 
     if (0 != luaL_dofile(lua_state, file_name.c_str()))

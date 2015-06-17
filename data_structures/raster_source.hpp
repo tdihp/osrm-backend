@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 
+#include <osrm/coordinate.hpp>
+
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -63,11 +65,12 @@ class RasterSource
     const double ymin;
     const double ymax;
 
-    short getRasterData(const double lon, const double lat)
+    signed short getRasterData(const float lon, const float lat)
     {
         if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
         {
-            throw osrm::exception("Requested data out of range");
+            return -1;
+            // throw osrm::exception("Requested data out of range");
         }
 
         unsigned xthP = (lon - xmin) / xstep;
@@ -79,11 +82,12 @@ class RasterSource
         return raster_data[yth][xth];
     };
 
-    short getRasterInterpolate(const double lon, const double lat)
+    signed short getRasterInterpolate(const float lon, const float lat)
     {
         if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
         {
-            throw osrm::exception("Requested data out of range");
+            return -1;
+            // throw osrm::exception("Requested data out of range");
         }
 
         unsigned xthP = (lon - xmin) / xstep;
@@ -168,13 +172,13 @@ void loadRasterSource(const std::string &source_path, const std::string &source_
     std::cout << "ok, after " << TIMER_SEC(loading_source) << "s" << std::endl;
 };
 
-short getRasterDataFromSource(const std::string &source_id, const double lat, const double lon)
+signed short getRasterDataFromSource(const std::string &source_id, const int lat, const int lon)
 {
     auto itr = LoadedSources.find(source_id);
     if (itr != LoadedSources.end())
     {
         RasterSource found = itr->second;
-        return found.getRasterData(lat, lon);
+        return found.getRasterData(float(lat) / COORDINATE_PRECISION, float(lon) / COORDINATE_PRECISION);
     }
     else
     {
@@ -182,13 +186,13 @@ short getRasterDataFromSource(const std::string &source_id, const double lat, co
     }
 };
 
-short getRasterInterpolateFromSource(const std::string &source_id, const double lat, const double lon)
+signed short getRasterInterpolateFromSource(const std::string &source_id, const int lat, const int lon)
 {
     auto itr = LoadedSources.find(source_id);
     if (itr != LoadedSources.end())
     {
         RasterSource found = itr->second;
-        return found.getRasterInterpolate(lat, lon);
+        return found.getRasterInterpolate(float(lat) / COORDINATE_PRECISION, float(lon) / COORDINATE_PRECISION);
     }
     else
     {

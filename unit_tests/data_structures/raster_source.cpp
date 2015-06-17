@@ -42,22 +42,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 BOOST_AUTO_TEST_SUITE(raster_source)
 
+int normalize(float coord)
+{
+    return coord * COORDINATE_PRECISION;
+}
+
 BOOST_AUTO_TEST_CASE(raster_test)
 {
     loadRasterSource("../unit_tests/fixtures/raster_data.asc", "test_data", 0, 0.09, 0, 0.09);
 
-    BOOST_CHECK_EQUAL(getRasterDataFromSource("test_data", 0.02, 0.02), 0);
+    BOOST_CHECK_EQUAL(getRasterDataFromSource("test_data", normalize(0.02), normalize(0.02)), 0);
     // BOOST_CHECK_EQUAL(getRasterDataFromSource(0, 0.0, 0.00), 0);
-    // TODO: 'unknown location:0: fatal error in "raster_test": signal: SIGSEGV, si_code: 0 (memory access violation at address: 0x00000000)' - seems to be boost problem w 0s
-    BOOST_CHECK_EQUAL(getRasterDataFromSource("test_data", 0.06, 0.06), 10);
-    BOOST_CHECK_EQUAL(getRasterDataFromSource("test_data", 0.06, 0.01), 4);
-    BOOST_CHECK_EQUAL(getRasterDataFromSource("test_data", 0.05, 0.02), 4);
-    BOOST_CHECK_EQUAL(getRasterInterpolateFromSource("test_data", 0.02, 0.02), 0);
-    BOOST_CHECK_EQUAL(getRasterInterpolateFromSource("test_data", 0.045, 0.045), 8);
+    // TODO: 'unknown location:0: fatal error in "raster_test": signal: SIGSEGV, si_code: 0 (memory access violation at address: 0x00000000)' - seems to be boost problem w 0
+    BOOST_CHECK_EQUAL(getRasterDataFromSource("test_data", normalize(0.06), normalize(0.06)), 10);
+    BOOST_CHECK_EQUAL(getRasterDataFromSource("test_data", normalize(0.06), normalize(0.01)), 4);
+    BOOST_CHECK_EQUAL(getRasterDataFromSource("test_data", normalize(0.05), normalize(0.02)), 4);
+    BOOST_CHECK_EQUAL(getRasterInterpolateFromSource("test_data", normalize(0.02), normalize(0.02)), 0);
+    BOOST_CHECK_EQUAL(getRasterInterpolateFromSource("test_data", normalize(0.045), normalize(0.045)), 8);
 
     loadRasterSource("../unit_tests/fixtures/raster_data.asc", "test_data_2", 0, 0.09, 0, 0.09);
 
-    BOOST_CHECK_THROW(getRasterDataFromSource("test_data_2", 0.02, 0.02), osrm::exception);
+    BOOST_CHECK_THROW(getRasterDataFromSource("test_data_2", normalize(0.02), normalize(0.02)), osrm::exception);
 
     BOOST_CHECK_THROW(loadRasterSource("../unit_tests/fixtures/nonexistent.asc", "test_data_3", 0, 0.1, 0, 0.1), osrm::exception);
 }
