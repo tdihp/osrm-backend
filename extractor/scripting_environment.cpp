@@ -68,7 +68,7 @@ ScriptingEnvironment::ScriptingEnvironment(const std::string &file_name) : file_
     SimpleLogger().Write() << "Using script " << file_name;
 }
 
-// These will be used so we can optionally call source_function, segment_function without breaking luabind::other profiles
+// These will be used so we can optionally call source_function, segment_function without breaking other profiles
 void sourceNoOp() {}
 void segmentNoOp(InternalExtractorEdge &edge, const double &distance) {}
 
