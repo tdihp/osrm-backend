@@ -116,8 +116,10 @@ int extractor::run()
         SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
 
+        lua_State *segment_state = scripting_environment.get_lua_state();
+
         luabind::call_function<void>(
-            scripting_environment.get_lua_state(), "source_function");
+            segment_state, "source_function");
 
         std::string generator = header.get("generator");
         if (generator.empty())
@@ -244,7 +246,7 @@ int extractor::run()
         extraction_containers.PrepareData(config.output_file_name,
                                           config.restriction_file_name,
                                           config.names_file_name,
-                                          local_state);
+                                          segment_state);
 
         TIMER_STOP(extracting);
         SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting) << "s";

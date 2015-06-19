@@ -53,7 +53,6 @@ class RasterSource
 
     float calcSize(double min, double max, unsigned count)
     {
-        SimpleLogger().Write() << "count: " << count;
         return (max - min) / count;
     };
 
@@ -124,17 +123,19 @@ class RasterSource
     ~RasterSource() {};
 };
 
-std::unordered_map<std::string, RasterSource> LoadedSources;
-std::unordered_map<std::string, std::string> LoadedSourcePaths;
+std::vector<RasterSource> LoadedSources;
+std::unordered_map<std::string, int> LoadedSourcePaths;
 
-void loadRasterSource(const std::string &source_path, const std::string &source_id, const double xmin, const double xmax, const double ymin, const double ymax)
+int loadRasterSource(const std::string &source_path, const double xmin, const double xmax, const double ymin, const double ymax)
 {
     auto itr = LoadedSourcePaths.find(source_path);
     if (itr != LoadedSourcePaths.end())
     {
-        std::cout << "[source loader] Already loaded source '" << source_path << "' with source_id " << itr->second << std::endl;
-        return;
+        std::cout << "[source loader] Already loaded source '" << source_path << "' at source_id " << itr->second << std::endl;
+        return itr->second;
     }
+
+    int source_id = LoadedSources.size();
 
     std::cout << "[source loader] Loading from " << source_path << "  ... " << std::flush;
     TIMER_START(loading_source);
@@ -166,38 +167,34 @@ void loadRasterSource(const std::string &source_path, const std::string &source_
 
     RasterSource source(rasterData, xmin, xmax, ymin, ymax);
     LoadedSourcePaths.emplace(source_path, source_id);
-    LoadedSources.emplace(source_id, source);
+    LoadedSources.emplace_back(source);
 
     TIMER_STOP(loading_source);
     std::cout << "ok, after " << TIMER_SEC(loading_source) << "s" << std::endl;
+
+    return source_id;
 };
 
-signed short getRasterDataFromSource(const std::string &source_id, const int lat, const int lon)
+signed short getRasterDataFromSource(const int source_id, const int lat, const int lon)
 {
-    auto itr = LoadedSources.find(source_id);
-    if (itr != LoadedSources.end())
-    {
-        RasterSource found = itr->second;
-        return found.getRasterData(float(lat) / COORDINATE_PRECISION, float(lon) / COORDINATE_PRECISION);
-    }
-    else
+    if (LoadedSources.size() < source_id + 1)
     {
         throw osrm::exception("error reading: no such loaded source");
     }
+
+    RasterSource found = LoadedSources[source_id];
+    return found.getRasterData(float(lat) / COORDINATE_PRECISION, float(lon) / COORDINATE_PRECISION);
 };
 
-signed short getRasterInterpolateFromSource(const std::string &source_id, const int lat, const int lon)
+signed short getRasterInterpolateFromSource(const int source_id, const int lat, const int lon)
 {
-    auto itr = LoadedSources.find(source_id);
-    if (itr != LoadedSources.end())
-    {
-        RasterSource found = itr->second;
-        return found.getRasterInterpolate(float(lat) / COORDINATE_PRECISION, float(lon) / COORDINATE_PRECISION);
-    }
-    else
+    if (LoadedSources.size() < source_id + 1)
     {
         throw osrm::exception("error reading: no such loaded source");
     }
+
+    RasterSource found = LoadedSources[source_id];
+    return found.getRasterInterpolate(float(lat) / COORDINATE_PRECISION, float(lon) / COORDINATE_PRECISION);
 };
 
 #endif /* RASTER_SOURCE_HPP */
