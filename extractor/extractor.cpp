@@ -241,8 +241,6 @@ int extractor::run()
             return 1;
         }
 
-        lua_State *local_state = scripting_environment.get_lua_state();
-
         extraction_containers.PrepareData(config.output_file_name,
                                           config.restriction_file_name,
                                           config.names_file_name,

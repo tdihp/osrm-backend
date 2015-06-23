@@ -135,10 +135,14 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
             .def("get_value_by_key", &osmium::Way::get_value_by_key)
             .def("get_value_by_key", &get_value_by_key<osmium::Way>)
             .def("id", &osmium::Way::id),
-        luabind::class_<InternalExtractorEdge>("Edge")
-            .def_readwrite("speed", &InternalExtractorEdge::speed)
+        luabind::class_<InternalExtractorEdge>("EdgeSource")
             .property("source_coordinate", &InternalExtractorEdge::source_coordinate)
-            .property("target_coordinate", &InternalExtractorEdge::target_coordinate),
+            .property("weight_data", &InternalExtractorEdge::weight_data),
+        luabind::class_<InternalExtractorEdge::WeightData>("WeightData")
+            .def_readwrite("speed", &InternalExtractorEdge::WeightData::speed),
+        luabind::class_<ExternalMemoryNode>("EdgeTarget")
+            .property("lat", &ExternalMemoryNode::lat)
+            .property("lon", &ExternalMemoryNode::lat),
         luabind::class_<FixedPointCoordinate>("Coordinate")
             .property("lat", &FixedPointCoordinate::lat)
             .property("lon", &FixedPointCoordinate::lon),
@@ -146,6 +150,7 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
             .def(luabind::constructor<>())
             .def(luabind::constructor<double>())
             .def(-luabind::self)
+            .def(tostring(luabind::const_self))
             .def(luabind::const_self + luabind::const_self)
             .def(luabind::const_self - luabind::const_self)
             .def(luabind::const_self * luabind::const_self)
