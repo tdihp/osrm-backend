@@ -69,8 +69,14 @@ ScriptingEnvironment::ScriptingEnvironment(const std::string &file_name) : file_
 }
 
 // These will be used so we can optionally call source_function, segment_function without breaking other profiles
-void sourceNoOp() {}
-void segmentNoOp(InternalExtractorEdge &edge, const double &distance) {}
+void sourceNoOp()
+{
+}
+
+void segmentNoOp(const FixedPointCoordinate &source, const ExternalMemoryNode &target,
+                 InternalExtractorEdge::WeightData &weight, const double &distance)
+{
+}
 
 void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
 {
