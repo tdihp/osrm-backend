@@ -45,13 +45,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <iostream>
 
+struct RasterDatum
+{
+    bool has_data;
+    short datum;
+
+    RasterDatum();
+    RasterDatum(bool _has_data = false)
+        : has_data(_has_data)
+    {
+    }
+
+    RasterDatum(short _datum)
+        : has_data(true), datum(_datum)
+    {
+        has_data = true;
+    }
+};
+
 class RasterSource
 {
   private:
     const float xstep;
     const float ystep;
 
-    float calcSize(double min, double max, unsigned count)
+    const float calcSize(double min, double max, unsigned count)
     {
         return (max - min) / count;
     };
@@ -64,12 +82,11 @@ class RasterSource
     const double ymin;
     const double ymax;
 
-    signed short getRasterData(const float lon, const float lat)
+    RasterDatum getRasterData(const float lon, const float lat)
     {
         if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
         {
-            return -1;
-            // throw osrm::exception("Requested data out of range");
+            return RasterDatum(false);
         }
 
         unsigned xthP = (lon - xmin) / xstep;
@@ -78,15 +95,14 @@ class RasterSource
         unsigned ythP = (ymax - lat) / ystep;
         int yth = ((ythP - floor (ythP)) > (ystep / 2) ? floor (ythP) : ceil (ythP));
 
-        return raster_data[yth][xth];
+        return RasterDatum(raster_data[yth][xth]);
     };
 
-    signed short getRasterInterpolate(const float lon, const float lat)
+    RasterDatum getRasterInterpolate(const float lon, const float lat)
     {
         if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
         {
-            return -1;
-            // throw osrm::exception("Requested data out of range");
+            return RasterDatum(false);
         }
 
         unsigned xthP = (lon - xmin) / xstep;
@@ -101,10 +117,10 @@ class RasterSource
         float x1 = 1.0 - x;
         float y1 = 1.0 - y;
 
-        return raster_data[top][left]     * (x1 * y1) +
-               raster_data[top][right]    * (x  * y1) +
-               raster_data[bottom][left]  * (x1 *  y) +
-               raster_data[bottom][right] * (x  *  y);
+        return RasterDatum(static_cast<short>((raster_data[top][left]     * (x1 * y1) +
+                                               raster_data[top][right]    * (x  * y1) +
+                                               raster_data[bottom][left]  * (x1 *  y) +
+                                               raster_data[bottom][right] * (x  *  y))));
     };
 
     RasterSource(std::vector<std::vector<short>> _raster_data,
@@ -175,7 +191,8 @@ int loadRasterSource(const std::string &source_path, const double xmin, const do
     return source_id;
 };
 
-signed short getRasterDataFromSource(const int source_id, const int lat, const int lon)
+
+RasterDatum getRasterDataFromSource(const int source_id, const int lon, const int lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {
@@ -183,10 +200,10 @@ signed short getRasterDataFromSource(const int source_id, const int lat, const i
     }
 
     RasterSource found = LoadedSources[source_id];
-    return found.getRasterData(float(lat) / COORDINATE_PRECISION, float(lon) / COORDINATE_PRECISION);
+    return found.getRasterData(float(lon) / COORDINATE_PRECISION, float(lat) / COORDINATE_PRECISION);
 };
 
-signed short getRasterInterpolateFromSource(const int source_id, const int lat, const int lon)
+RasterDatum getRasterInterpolateFromSource(const int source_id, const int lon, const int lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {
@@ -194,7 +211,7 @@ signed short getRasterInterpolateFromSource(const int source_id, const int lat, 
     }
 
     RasterSource found = LoadedSources[source_id];
-    return found.getRasterInterpolate(float(lat) / COORDINATE_PRECISION, float(lon) / COORDINATE_PRECISION);
+    return found.getRasterInterpolate(float(lon) / COORDINATE_PRECISION, float(lat) / COORDINATE_PRECISION);
 };
 
 #endif /* RASTER_SOURCE_HPP */

@@ -73,8 +73,8 @@ void sourceNoOp()
 {
 }
 
-void segmentNoOp(const FixedPointCoordinate &source, const ExternalMemoryNode &target,
-                 InternalExtractorEdge::WeightData &weight, const double &distance)
+void segmentNoOp(const FixedPointCoordinate *source, const ExternalMemoryNode *target,
+                 const double *distance, InternalExtractorEdge::WeightData *weight)
 {
 }
 
@@ -148,10 +148,13 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
             .def_readwrite("speed", &InternalExtractorEdge::WeightData::speed),
         luabind::class_<ExternalMemoryNode>("EdgeTarget")
             .property("lat", &ExternalMemoryNode::lat)
-            .property("lon", &ExternalMemoryNode::lat),
+            .property("lon", &ExternalMemoryNode::lon),
         luabind::class_<FixedPointCoordinate>("Coordinate")
             .property("lat", &FixedPointCoordinate::lat)
             .property("lon", &FixedPointCoordinate::lon),
+        luabind::class_<RasterDatum>("RasterDatum")
+            .property("datum", &RasterDatum::datum)
+            .property("has_data", &RasterDatum::has_data),
         luabind::class_<double>("double")
             .def(luabind::constructor<>())
             .def(luabind::constructor<double>())

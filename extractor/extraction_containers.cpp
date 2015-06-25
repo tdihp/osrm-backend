@@ -270,8 +270,8 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
             segment_state, "segment_function",
             boost::cref((*edge_iterator).source_coordinate),
             boost::cref(*node_iterator),
-            boost::ref((*edge_iterator).weight_data),
-            boost::cref(distance));
+            boost::cref(distance),
+            boost::ref((*edge_iterator).weight_data));
 
         const double weight = [distance](const InternalExtractorEdge::WeightData& data) {
             switch (data.type)
