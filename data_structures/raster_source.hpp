@@ -30,6 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 
+/**
+    \brief Small wrapper around raster source queries to optionally provide results
+    gracefully, depending on source bounds
+*/
 struct RasterDatum
 {
     bool has_data;
@@ -44,6 +48,9 @@ struct RasterDatum
     ~RasterDatum();
 };
 
+/**
+    \brief Stores raster source data in memory and provides lookup functions.
+*/
 class RasterSource
 {
   private:

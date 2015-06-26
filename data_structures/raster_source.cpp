@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/coordinate.hpp>
 
+#include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -41,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <iostream>
 
+// LoadedSources stores sources in memory; LoadedSourcePaths maps them to indices
 std::vector<RasterSource> LoadedSources;
 std::unordered_map<std::string, int> LoadedSourcePaths;
 
@@ -57,15 +59,21 @@ RasterSource::RasterSource(std::vector<std::vector<short>> _raster_data,
                            double _ymax)
     : xstep(calcSize(_xmin, _xmax, _raster_data[0].size())),
       ystep(calcSize(_ymin, _ymax, _raster_data.size())), raster_data(_raster_data), xmin(_xmin),
-      xmax(_xmax), ymin(_ymin), ymax(_ymax){};
+      xmax(_xmax), ymin(_ymin), ymax(_ymax)
+{
+    BOOST_ASSERT(xstep != 0);
+    BOOST_ASSERT(ystep != 0);
+};
 
 RasterSource::~RasterSource(){};
 
 float RasterSource::calcSize(double min, double max, unsigned count) const
 {
+    BOOST_ASSERT(count > 0);
     return (max - min) / count;
 }
 
+// Query raster source for nearest data point
 RasterDatum RasterSource::getRasterData(const float lon, const float lat)
 {
     if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
@@ -82,6 +90,7 @@ RasterDatum RasterSource::getRasterData(const float lon, const float lat)
     return RasterDatum(raster_data[yth][xth]);
 }
 
+// Query raster source using bilinear interpolation
 RasterDatum RasterSource::getRasterInterpolate(const float lon, const float lat)
 {
     if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
@@ -106,6 +115,7 @@ RasterDatum RasterSource::getRasterInterpolate(const float lon, const float lat)
          raster_data[bottom][left] * (x1 * y) + raster_data[bottom][right] * (x * y))));
 }
 
+// Load raster source into memory
 int loadRasterSource(const std::string &source_path,
                      const double xmin,
                      const double xmax,
@@ -161,6 +171,7 @@ int loadRasterSource(const std::string &source_path,
     return source_id;
 };
 
+// External function for looking up nearest data point from a specified source
 RasterDatum getRasterDataFromSource(int source_id, int lon, int lat)
 {
     if (LoadedSources.size() < source_id + 1)
@@ -173,6 +184,7 @@ RasterDatum getRasterDataFromSource(int source_id, int lon, int lat)
                                float(lat) / COORDINATE_PRECISION);
 };
 
+// External function for looking up interpolated data from a specified source
 RasterDatum getRasterInterpolateFromSource(int source_id, int lon, int lat)
 {
     if (LoadedSources.size() < source_id + 1)
