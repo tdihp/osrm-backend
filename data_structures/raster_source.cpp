@@ -25,14 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef RASTER_SOURCE_HPP
-#define RASTER_SOURCE_HPP
+#include "raster_source.hpp"
 
 #include "../util/simple_logger.hpp"
 #include "../util/timing_util.hpp"
 #include "../util/osrm_exception.hpp"
-
-#include "../typedefs.h"
 
 #include <osrm/coordinate.hpp>
 
@@ -40,98 +37,86 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem/fstream.hpp>
 
 #include <unordered_map>
-#include <vector>
 #include <sstream>
 #include <cmath>
 #include <iostream>
 
-class RasterSource
-{
-  private:
-    const float xstep;
-    const float ystep;
-
-    float calcSize(double min, double max, unsigned count)
-    {
-        return (max - min) / count;
-    };
-
-  public:
-    std::vector<std::vector<short>> raster_data;
-
-    const double xmin;
-    const double xmax;
-    const double ymin;
-    const double ymax;
-
-    signed short getRasterData(const float lon, const float lat)
-    {
-        if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
-        {
-            return -1;
-            // throw osrm::exception("Requested data out of range");
-        }
-
-        unsigned xthP = (lon - xmin) / xstep;
-        int xth = ((xthP - floor (xthP)) > (xstep / 2) ? floor (xthP) : ceil (xthP));
-
-        unsigned ythP = (ymax - lat) / ystep;
-        int yth = ((ythP - floor (ythP)) > (ystep / 2) ? floor (ythP) : ceil (ythP));
-
-        return raster_data[yth][xth];
-    };
-
-    signed short getRasterInterpolate(const float lon, const float lat)
-    {
-        if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
-        {
-            return -1;
-            // throw osrm::exception("Requested data out of range");
-        }
-
-        unsigned xthP = (lon - xmin) / xstep;
-        unsigned ythP = (ymax - lat) / ystep;
-        int top    = floor (ythP);
-        int bottom = ceil  (ythP);
-        int left   = floor (xthP);
-        int right  = ceil  (xthP);
-
-        float x = (lon - left * xstep + xmin) / xstep;
-        float y = (ymax - top * ystep - lat) / ystep;
-        float x1 = 1.0 - x;
-        float y1 = 1.0 - y;
-
-        return raster_data[top][left]     * (x1 * y1) +
-               raster_data[top][right]    * (x  * y1) +
-               raster_data[bottom][left]  * (x1 *  y) +
-               raster_data[bottom][right] * (x  *  y);
-    };
-
-    RasterSource(std::vector<std::vector<short>> _raster_data,
-                 double _xmin,
-                 double _xmax,
-                 double _ymin,
-                 double _ymax)
-        : xstep(calcSize(_xmin, _xmax, _raster_data[0].size())),
-          ystep(calcSize(_ymin, _ymax, _raster_data.size())),
-          raster_data(_raster_data),
-          xmin(_xmin),
-          xmax(_xmax),
-          ymin(_ymin),
-          ymax(_ymax) {};
-
-    ~RasterSource() {};
-};
-
 std::vector<RasterSource> LoadedSources;
 std::unordered_map<std::string, int> LoadedSourcePaths;
 
-int loadRasterSource(const std::string &source_path, const double xmin, const double xmax, const double ymin, const double ymax)
+RasterDatum::RasterDatum(bool has_data) : has_data(has_data){};
+
+RasterDatum::RasterDatum(short datum) : has_data(true), datum(datum) {}
+
+RasterDatum::~RasterDatum(){};
+
+RasterSource::RasterSource(std::vector<std::vector<short>> _raster_data,
+                           double _xmin,
+                           double _xmax,
+                           double _ymin,
+                           double _ymax)
+    : xstep(calcSize(_xmin, _xmax, _raster_data[0].size())),
+      ystep(calcSize(_ymin, _ymax, _raster_data.size())), raster_data(_raster_data), xmin(_xmin),
+      xmax(_xmax), ymin(_ymin), ymax(_ymax){};
+
+RasterSource::~RasterSource(){};
+
+float RasterSource::calcSize(double min, double max, unsigned count) const
+{
+    return (max - min) / count;
+}
+
+RasterDatum RasterSource::getRasterData(const float lon, const float lat)
+{
+    if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
+    {
+        return RasterDatum(false);
+    }
+
+    unsigned xthP = (lon - xmin) / xstep;
+    int xth = ((xthP - floor(xthP)) > (xstep / 2) ? floor(xthP) : ceil(xthP));
+
+    unsigned ythP = (ymax - lat) / ystep;
+    int yth = ((ythP - floor(ythP)) > (ystep / 2) ? floor(ythP) : ceil(ythP));
+
+    return RasterDatum(raster_data[yth][xth]);
+}
+
+RasterDatum RasterSource::getRasterInterpolate(const float lon, const float lat)
+{
+    if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
+    {
+        return RasterDatum(false);
+    }
+
+    unsigned xthP = (lon - xmin) / xstep;
+    unsigned ythP = (ymax - lat) / ystep;
+    int top = floor(ythP);
+    int bottom = ceil(ythP);
+    int left = floor(xthP);
+    int right = ceil(xthP);
+
+    float x = (lon - left * xstep + xmin) / xstep;
+    float y = (ymax - top * ystep - lat) / ystep;
+    float x1 = 1.0 - x;
+    float y1 = 1.0 - y;
+
+    return RasterDatum(static_cast<short>(
+        (raster_data[top][left] * (x1 * y1) + raster_data[top][right] * (x * y1) +
+         raster_data[bottom][left] * (x1 * y) + raster_data[bottom][right] * (x * y))));
+}
+
+int loadRasterSource(const std::string &source_path,
+                     const double xmin,
+                     const double xmax,
+                     const double ymin,
+                     const double ymax)
 {
     auto itr = LoadedSourcePaths.find(source_path);
     if (itr != LoadedSourcePaths.end())
     {
-        std::cout << "[source loader] Already loaded source '" << source_path << "' at source_id " << itr->second << std::endl;
+        std::cout << "[source loader] Already loaded source '" << source_path << "' at source_id "
+                  << itr->second << std::endl;
         return itr->second;
     }
 
@@ -158,7 +143,8 @@ int loadRasterSource(const std::string &source_path, const double xmin, const do
         ss << line;
         short datum;
 
-        while (ss >> datum) {
+        while (ss >> datum)
+        {
             lineData.emplace_back(datum);
         }
         rasterData.emplace_back(lineData);
@@ -175,7 +161,7 @@ int loadRasterSource(const std::string &source_path, const double xmin, const do
     return source_id;
 };
 
-signed short getRasterDataFromSource(const int source_id, const int lat, const int lon)
+RasterDatum getRasterDataFromSource(int source_id, int lon, int lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {
@@ -183,10 +169,11 @@ signed short getRasterDataFromSource(const int source_id, const int lat, const i
     }
 
     RasterSource found = LoadedSources[source_id];
-    return found.getRasterData(float(lat) / COORDINATE_PRECISION, float(lon) / COORDINATE_PRECISION);
+    return found.getRasterData(float(lon) / COORDINATE_PRECISION,
+                               float(lat) / COORDINATE_PRECISION);
 };
 
-signed short getRasterInterpolateFromSource(const int source_id, const int lat, const int lon)
+RasterDatum getRasterInterpolateFromSource(int source_id, int lon, int lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {
@@ -194,7 +181,6 @@ signed short getRasterInterpolateFromSource(const int source_id, const int lat, 
     }
 
     RasterSource found = LoadedSources[source_id];
-    return found.getRasterInterpolate(float(lat) / COORDINATE_PRECISION, float(lon) / COORDINATE_PRECISION);
+    return found.getRasterInterpolate(float(lon) / COORDINATE_PRECISION,
+                                      float(lat) / COORDINATE_PRECISION);
 };
-
-#endif /* RASTER_SOURCE_HPP */

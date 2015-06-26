@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../typedefs.h"
 #include "../../util/osrm_exception.hpp"
 
+#include <osrm/coordinate.hpp>
+
 #include <boost/filesystem.hpp>
 
 #include <boost/test/unit_test.hpp>
