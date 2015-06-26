@@ -46,11 +46,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 std::vector<RasterSource> LoadedSources;
 std::unordered_map<std::string, int> LoadedSourcePaths;
 
-RasterDatum::RasterDatum(bool has_data) : has_data(has_data){};
+RasterDatum::RasterDatum(bool has_data) : has_data(has_data) {}
 
 RasterDatum::RasterDatum(short datum) : has_data(true), datum(datum) {}
 
-RasterDatum::~RasterDatum(){};
+RasterDatum::~RasterDatum() {}
 
 RasterSource::RasterSource(std::vector<std::vector<short>> _raster_data,
                            double _xmin,
@@ -63,7 +63,7 @@ RasterSource::RasterSource(std::vector<std::vector<short>> _raster_data,
 {
     BOOST_ASSERT(xstep != 0);
     BOOST_ASSERT(ystep != 0);
-};
+}
 
 RasterSource::~RasterSource(){};
 
@@ -169,10 +169,10 @@ int loadRasterSource(const std::string &source_path,
     std::cout << "ok, after " << TIMER_SEC(loading_source) << "s" << std::endl;
 
     return source_id;
-};
+}
 
 // External function for looking up nearest data point from a specified source
-RasterDatum getRasterDataFromSource(int source_id, int lon, int lat)
+RasterDatum getRasterDataFromSource(unsigned int source_id, int lon, int lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {
@@ -182,10 +182,10 @@ RasterDatum getRasterDataFromSource(int source_id, int lon, int lat)
     RasterSource found = LoadedSources[source_id];
     return found.getRasterData(float(lon) / COORDINATE_PRECISION,
                                float(lat) / COORDINATE_PRECISION);
-};
+}
 
 // External function for looking up interpolated data from a specified source
-RasterDatum getRasterInterpolateFromSource(int source_id, int lon, int lat)
+RasterDatum getRasterInterpolateFromSource(unsigned int source_id, int lon, int lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {
@@ -195,4 +195,4 @@ RasterDatum getRasterInterpolateFromSource(int source_id, int lon, int lat)
     RasterSource found = LoadedSources[source_id];
     return found.getRasterInterpolate(float(lon) / COORDINATE_PRECISION,
                                       float(lat) / COORDINATE_PRECISION);
-};
+}

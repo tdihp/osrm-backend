@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define RASTER_SOURCE_HPP
 
 #include <vector>
+#include <string>
 
 /**
     \brief Small wrapper around raster source queries to optionally provide results
@@ -86,8 +87,8 @@ int loadRasterSource(const std::string &source_path,
                      const double ymin,
                      const double ymax);
 
-RasterDatum getRasterDataFromSource(int source_id, int lon, int lat);
+RasterDatum getRasterDataFromSource(unsigned int source_id, int lon, int lat);
 
-RasterDatum getRasterInterpolateFromSource(int source_id, int lon, int lat);
+RasterDatum getRasterInterpolateFromSource(unsigned int source_id, int lon, int lat);
 
 #endif /* RASTER_SOURCE_HPP */
