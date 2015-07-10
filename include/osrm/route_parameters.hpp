@@ -79,6 +79,8 @@ struct RouteParameters
 
     void addCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
 
+    void setTSPAlgo(const std::string &tsp_algo);
+
     short zoom_level;
     bool print_instructions;
     bool alternate_route;
@@ -95,6 +97,7 @@ struct RouteParameters
     std::string output_format;
     std::string jsonp_parameter;
     std::string language;
+    std::string tsp_algo;
     std::vector<std::string> hints;
     std::vector<unsigned> timestamps;
     std::vector<bool> uturns;
