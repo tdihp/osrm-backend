@@ -496,7 +496,7 @@ class Contractor
                             continue;
                         }
                     }
-					std::cout << "[edge] " << edge.source << " " << edge.target << std::endl;
+					//std::cout << "[edge] " << edge.source << " " << edge.target << std::endl;
                     contractor_graph->InsertEdge(edge.source, edge.target, edge.data);
                 }
                 data->inserted_edges.clear();
