@@ -284,7 +284,7 @@ class Contractor
 
     ~Contractor() {}
 
-    void Run( double core_factor = 0.7 )
+    void Run( double core_factor = 0.9 )
     {
         // for the preperation we can use a big grain size, which is much faster (probably cache)
         constexpr size_t InitGrainSize = 100000;
@@ -496,6 +496,7 @@ class Contractor
                             continue;
                         }
                     }
+					std::cout << "[edge] " << edge.source << " " << edge.target << std::endl;
                     contractor_graph->InsertEdge(edge.source, edge.target, edge.data);
                 }
                 data->inserted_edges.clear();
