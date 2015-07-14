@@ -398,7 +398,7 @@ void Prepare::ContractGraph(const std::size_t number_of_edge_based_nodes,
                             DeallocatingVector<QueryEdge>& contracted_edge_list)
 {
     Contractor contractor(number_of_edge_based_nodes, edge_based_edge_list);
-    contractor.Run();
+    contractor.Run(config.core_factor);
     contractor.GetEdges(contracted_edge_list);
 }
 

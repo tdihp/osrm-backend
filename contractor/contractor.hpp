@@ -284,7 +284,7 @@ class Contractor
 
     ~Contractor() {}
 
-    void Run( double core_factor = 0.9 )
+    void Run( double core_factor = 1.0 )
     {
         // for the preperation we can use a big grain size, which is much faster (probably cache)
         constexpr size_t InitGrainSize = 100000;
