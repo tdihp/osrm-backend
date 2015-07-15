@@ -196,14 +196,14 @@ class ShortestPathRouting final
                         super::RoutingStep(forward_heap2, reverse_heap2, &middle2,
                                            &local_upper_bound2, min_edge_offset, true);
 						if(!forward_heap2.Empty()){
-							local_minimum_forward = forward_heap1.Min();
+							local_minimum_forward = forward_heap2.Min();
 						}
                     }
                     if (!reverse_heap2.Empty())
                     {
                         super::RoutingStep(reverse_heap2, forward_heap2, &middle2,
                                            &local_upper_bound2, min_edge_offset, false);
-						if(!reverse_heap1.Empty()){
+						if(!reverse_heap2.Empty()){
 							local_minimum_reverse = reverse_heap2.Min();
 						}
                     }
