@@ -525,7 +525,7 @@ class Contractor
             //            unsigned quaddegree = 0;
             //
             //            for(unsigned i = 0; i < remaining_nodes.size(); ++i) {
-            //                unsigned degree = contractor_graph->EndEdges(remaining_nodes[i].first)
+            //                unsigned degree = contractor_graph->EndEdges(remaining_nodes[i].id)	//this should be the id? changed from legacy code .first
             //                -
             //                contractor_graph->BeginEdges(remaining_nodes[i].first);
             //                if(degree > maxdegree)
@@ -546,6 +546,8 @@ class Contractor
 
             p.printStatus(number_of_contracted_nodes);
         }
+
+		std::cout << "[core] " << remaining_nodes.size() << " nodes " << contractor_graph->GetNumberOfEdges() << " edges." << std::endl;
 
         thread_data_list.data.clear();
     }

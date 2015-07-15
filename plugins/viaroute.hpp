@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/json_renderer.hpp"
 #include "../util/make_unique.hpp"
 #include "../util/simple_logger.hpp"
+#include "../util/timing_util.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -153,15 +154,18 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         };
         osrm::for_each_pair(phantom_node_pair_list, build_phantom_pairs);
 
-        if (route_parameters.alternate_route && 1 == raw_route.segment_end_coordinates.size())
+        if (false && route_parameters.alternate_route && 1 == raw_route.segment_end_coordinates.size()) //TODO remove false statement
         {
             search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
                                                 raw_route);
         }
         else
         {
+			TIMER_START(qtime);
             search_engine_ptr->shortest_path(raw_route.segment_end_coordinates,
                                              route_parameters.uturns, raw_route);
+			TIMER_STOP(qtime);
+			std::cout << "[time] " << TIMER_MSEC(qtime) << std::endl;
         }
 
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)

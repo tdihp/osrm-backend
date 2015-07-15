@@ -69,6 +69,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
 
+
         // const NodeID parentnode = forward_heap.GetData(node).parent;
         // SimpleLogger().Write() << (forward_direction ? "[fwd] " : "[rev] ") << "settled edge ("
         // << parentnode << "," << node << "), dist: " << distance;
@@ -133,19 +134,19 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
                 const int to_distance = distance + edge_weight;
 
-                // New Node discovered -> Add to Heap + Node Info Storage
-                if (!forward_heap.WasInserted(to))
-                {
-                    forward_heap.Insert(to, to_distance, node);
-                }
-                // Found a shorter Path -> Update distance
-                else if (to_distance < forward_heap.GetKey(to))
-                {
-                    // new parent
-                    forward_heap.GetData(to).parent = node;
-                    forward_heap.DecreaseKey(to, to_distance);
-                }
-            }
+				// New Node discovered -> Add to Heap + Node Info Storage
+				if (!forward_heap.WasInserted(to))
+				{
+					forward_heap.Insert(to, to_distance, node);
+				}
+				// Found a shorter Path -> Update distance
+				else if (to_distance < forward_heap.GetKey(to))
+				{
+					// new parent
+					forward_heap.GetData(to).parent = node;
+					forward_heap.DecreaseKey(to, to_distance);
+				}
+			}
         }
     }
 

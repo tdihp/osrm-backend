@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "routing_base.hpp"
 #include "../data_structures/search_engine_data.hpp"
 #include "../util/integer_range.hpp"
+#include "../util/timing_util.hpp"
 #include "../typedefs.h"
 
 template <class DataFacadeT>
@@ -80,6 +81,7 @@ class ShortestPathRouting final
         // Get distance to next pair of target nodes.
         for (const PhantomNodes &phantom_node_pair : phantom_nodes_vector)
         {
+			TIMER_START( t_init );
             forward_heap1.Clear();
             forward_heap2.Clear();
             reverse_heap1.Clear();
@@ -148,39 +150,69 @@ class ShortestPathRouting final
                 // SimpleLogger().Write(logDEBUG) << "rev-a insert: " <<
                 // phantom_node_pair.target_phantom.reverse_node_id << ", w: " << phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
             }
+			TIMER_STOP( t_init );
+			std::cout << "[init] " << TIMER_MSEC( t_init ) << std::endl;
 
+			//ch stopping criterion
+			int local_minimum_forward = 0;
+			int local_minimum_reverse = 0;
+
+			TIMER_START( t_query_1 );
             // run two-Target Dijkstra routing step.
-            while (0 < (forward_heap1.Size() + reverse_heap1.Size()))
-            {
+            while (0 < (forward_heap1.Size() + reverse_heap1.Size()) && local_upper_bound1 > local_minimum_forward + local_minimum_reverse )
+            //while (0 < (forward_heap1.Size() + reverse_heap1.Size()) )
+			{
                 if (!forward_heap1.Empty())
                 {
                     super::RoutingStep(forward_heap1, reverse_heap1, &middle1, &local_upper_bound1,
                                        min_edge_offset, true);
+					if(!forward_heap1.Empty()){
+						local_minimum_forward = forward_heap1.Min();
+					}
                 }
                 if (!reverse_heap1.Empty())
                 {
                     super::RoutingStep(reverse_heap1, forward_heap1, &middle1, &local_upper_bound1,
                                        min_edge_offset, false);
+					if(!reverse_heap1.Empty()){
+						local_minimum_reverse = reverse_heap1.Min();
+					}
                 }
             }
+			TIMER_STOP( t_query_1 );
+			std::cout << "[q1] " << TIMER_MSEC( t_query_1 ) << std::endl;
 
+
+			TIMER_START( t_query_2 );
             if (!reverse_heap2.Empty())
             {
-                while (0 < (forward_heap2.Size() + reverse_heap2.Size()))
+				local_minimum_forward = 0;
+				local_minimum_reverse = 0;
+                while (0 < (forward_heap2.Size() + reverse_heap2.Size()) && local_upper_bound2 > local_minimum_forward + local_minimum_reverse)
+                //while (0 < (forward_heap2.Size() + reverse_heap2.Size()) )
                 {
                     if (!forward_heap2.Empty())
                     {
                         super::RoutingStep(forward_heap2, reverse_heap2, &middle2,
                                            &local_upper_bound2, min_edge_offset, true);
+						if(!forward_heap2.Empty()){
+							local_minimum_forward = forward_heap1.Min();
+						}
                     }
                     if (!reverse_heap2.Empty())
                     {
                         super::RoutingStep(reverse_heap2, forward_heap2, &middle2,
                                            &local_upper_bound2, min_edge_offset, false);
+						if(!reverse_heap1.Empty()){
+							local_minimum_reverse = reverse_heap2.Min();
+						}
                     }
                 }
             }
+			TIMER_STOP( t_query_2 );
+			std::cout << "[q2] " << TIMER_MSEC( t_query_2 ) << std::endl;
 
+			TIMER_START( t_postproc );
             // No path found for both target nodes?
             if ((INVALID_EDGE_WEIGHT == local_upper_bound1) &&
                 (INVALID_EDGE_WEIGHT == local_upper_bound2))
@@ -309,6 +341,8 @@ class ShortestPathRouting final
             distance1 += local_upper_bound1;
             distance2 += local_upper_bound2;
             ++current_leg;
+			TIMER_STOP( t_postproc );
+			std::cout << "[pp] " << TIMER_MSEC( t_postproc ) << std::endl;
         }
 
         if (distance1 > distance2)
