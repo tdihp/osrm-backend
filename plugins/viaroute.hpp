@@ -162,8 +162,16 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         else
         {
 			TIMER_START(qtime);
-            search_engine_ptr->shortest_path(raw_route.segment_end_coordinates,
-                                             route_parameters.uturns, raw_route);
+			if(1==raw_route.segment_end_coordinates.size())
+			{
+            	search_engine_ptr->direct_shortest_path(raw_route.segment_end_coordinates,
+                	  		                            route_parameters.uturns, raw_route);
+			}
+			else
+			{
+            	search_engine_ptr->shortest_path(raw_route.segment_end_coordinates,
+                	                             route_parameters.uturns, raw_route);
+			}
 			TIMER_STOP(qtime);
 			std::cout << "[time] " << TIMER_MSEC(qtime) << std::endl;
         }
