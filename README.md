@@ -1,3 +1,20 @@
+## Branch osrm-c
+
+This branch is an effort to build [osrm-c](https://github.com/tdihp/osrm-c) on Windows, as DLL.
+
+### requirements
+
+1. http://build.project-osrm.org/libs_osrm_Release_test.7z
+2. [Visual Studio 2013](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx) minimum install
+3. [CTP_Nov2013](https://www.microsoft.com/en-us/download/details.aspx?id=41151)
+
+### build
+
+1. extract libs_osrm_Release_test.7z
+2. clone this branch into extracted folder
+3. copy build_osrm.bat in this repo to extracted folder, overwrite the existing one.
+4. run build_osrm.bat
+
 ## About
 
 The Open Source Routing Machine is a high performance routing engine written in C++11 designed to run on OpenStreetMap data.
