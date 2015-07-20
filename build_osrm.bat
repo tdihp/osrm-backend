@@ -5,7 +5,7 @@ set BOOST_ROOT=%CD%/boost_min
 set TBB_INSTALL_DIR=%CD%/tbb
 set TBB_ARCH_PLATFORM=intel64/vc12
 
-set osrmdir="C:\Users\heping\Documents\osrm-backend"
+set osrmdir="osrm-backend"
 if not exist osrm-bin (mkdir osrm-bin)
 REM if not exist osrm-backend (git clone -b develop https://github.com/Project-OSRM/osrm-backend osrm-backend)
 REM cd osrm-backend
